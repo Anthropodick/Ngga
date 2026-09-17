@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — Main Dashboard</title>
+<style>
+  :root{
+    --bg:#0a0e14; --card:#151b28; --border:#242c3d;
+    --text:#e6edf3; --muted:#8b98ab;
+    --accent:#6366f1; --accent-2:#8b5cf6;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 10% -10%,rgba(99,102,241,.18),transparent 60%),
+               radial-gradient(900px 500px at 110% 10%,rgba(139,92,246,.15),transparent 60%),
+               var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:grid;place-items:center;
+    padding:20px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .login-card{
+    width:100%;max-width:400px;
+    background:linear-gradient(180deg,#141a27,#101622);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:32px 26px 26px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    animation:pop .4s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+  .logo-big{
+    width:64px;height:64px;margin:0 auto 18px;
+    border-radius:18px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;
+    color:#fff;font-weight:800;font-size:26px;
+    box-shadow:0 12px 34px rgba(99,102,241,.5);
+  }
+  h1{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px;}
+  .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:24px;}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:12px;font-weight:600;
+    color:var(--muted);margin-bottom:6px;letter-spacing:.3px;
+    text-transform:uppercase;
+  }
+  .field input{
+    width:100%;
+    padding:12px 14px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-size:14px;
+    font-family:inherit;
+    transition:border-color .2s, box-shadow .2s;
+    outline:none;
+  }
+  .field input:focus{
+    border-color:rgba(99,102,241,.6);
+    box-shadow:0 0 0 3px rgba(99,102,241,.18);
+  }
+
+  .row{display:flex;justify-content:space-between;align-items:center;margin:14px 0 18px;font-size:12.5px;}
+  .row label{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer;}
+  .row a{color:#a5b4fc;text-decoration:none;font-weight:600;}
+  .row a:hover{text-decoration:underline;}
+
+  .btn{
+    width:100%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:600;font-size:14px;
+    padding:13px;border-radius:11px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#fff;
+    box-shadow:0 8px 22px rgba(99,102,241,.4);
+    transition:transform .15s, box-shadow .2s;
+  }
+  .btn:hover{box-shadow:0 10px 28px rgba(99,102,241,.55);}
+  .btn:active{transform:scale(.98);}
+  .btn[disabled]{opacity:.6;cursor:not-allowed;}
+
+  .err{
+    display:none;
+    background:rgba(239,68,68,.1);
+    border:1px solid rgba(239,68,68,.35);
+    color:#fca5a5;
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .err.show{display:block;}
+
+  .hint{
+    text-align:center;font-size:12px;color:var(--muted);
+    margin-top:18px;line-height:1.6;
+  }
+  .hint code{
+    background:var(--card);padding:2px 6px;border-radius:6px;
+    color:#c7d2fe;font-size:11.5px;
+  }
+</style>
+</head>
+<body>
+
+<form class="login-card" id="loginForm" autocomplete="on">
+  <div class="logo-big">M</div>
+  <h1>Welcome Back</h1>
+  <p class="sub">Masuk untuk mengakses Main Dashboard</p>
+
+  <div class="err" id="errBox">Username atau password salah.</div>
+
+  <div class="field">
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="masukkan username" autocomplete="username" required />
+  </div>
+
+  <div class="field">
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+  </div>
+
+  <div class="row">
+    <label><input type="checkbox" id="remember" checked /> Remember me</label>
+    <a href="#" onclick="alert('Hubungi admin untuk reset password.');return false;">Forgot password?</a>
+  </div>
+
+  <button type="submit" class="btn" id="submitBtn">Sign In</button>
+
+  <p class="hint">
+    Demo credentials: <code>admin</code> / <code>admin123</code>
+  </p>
+</form>
+
+<script>
+(function(){
+  'use strict';
+  const SESSION_KEY = 'dashboard_session_v1';
+  const VALID_USER = 'admin';
+  const VALID_PASS = 'admin123';
+
+  // Kalau sudah login, langsung redirect
+  try {
+    if (localStorage.getItem(SESSION_KEY)) {
+      location.replace('index.html');
+      return;
+    }
+  } catch(e){}
+
+  const form = document.getElementById('loginForm');
+  const errBox = document.getElementById('errBox');
+  const btn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    errBox.classList.remove('show');
+
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+
+    if (!u || !p) {
+      errBox.textContent = 'Username dan password wajib diisi.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+
+    // Simulasi delay verifikasi
+    setTimeout(function(){
+      if (u === VALID_USER && p === VALID_PASS) {
+        const session = {
+          user: u,
+          loginAt: Date.now(),
+          remember: remember
+        };
+        try {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        } catch(err){}
+        btn.textContent = 'Berhasil ✓';
+        setTimeout(()=> location.replace('index.html'), 350);
+      } else {
+        errBox.textContent = 'Username atau password salah.';
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }, 550);
+  });
+})();
+</script>
+</body>
+</html>
