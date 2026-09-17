@@ -217,56 +217,6 @@
   .toast.warn svg{color:var(--warn);}
   @keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 
-  /* ===== Bottom "Use/Download Tools" ===== */
-  .bottom-section{
-    margin-top:40px;
-    padding-top:26px;
-    border-top:1px solid var(--border);
-  }
-  .bottom-btn{
-    display:block;width:100%;
-    padding:20px 18px;
-    background:#161b26;
-    border:1px solid #1f2534;
-    border-radius:14px;
-    color:#60a5fa;
-    font-family:inherit;
-    font-weight:700;
-    font-size:15px;
-    letter-spacing:.4px;
-    cursor:pointer;
-    text-align:center;
-    transition:background .2s, border-color .2s;
-  }
-  .bottom-btn:hover{
-    background:#1a2030;
-    border-color:#2a3145;
-  }
-  .bottom-btn.shake{
-    animation:shakeBtn .55s cubic-bezier(.36,.07,.19,.97);
-  }
-  @keyframes shakeBtn{
-    10%,90%  { transform: translateX(-3px); }
-    20%,80%  { transform: translateX(5px);  }
-    30%,50%,70% { transform: translateX(-7px); }
-    40%,60%  { transform: translateX(7px);  }
-  }
-  .bottom-note{
-    text-align:center;
-    font-size:13px;
-    color:#fca5a5;
-    margin-top:12px;
-    font-weight:600;
-    opacity:0;
-    transform:translateY(-5px);
-    transition:opacity .3s, transform .3s;
-    pointer-events:none;
-  }
-  .bottom-note.show{
-    opacity:1;
-    transform:translateY(0);
-  }
-
   @media (max-width:640px){
     .topbar{padding:12px 14px;gap:10px;}
     .brand span.brand-text{display:none;}
@@ -283,7 +233,6 @@
     .tool-desc{font-size:11px;}
     .modal{padding:22px 18px 18px;}
     .toast-wrap{top:70px;}
-    .bottom-btn{font-size:13.5px;padding:16px 14px;}
   }
   @media (max-width:380px){
     .tools-grid{grid-template-columns:1fr 1fr;}
@@ -406,12 +355,6 @@
     </button>
 
   </div>
-
-  <!-- ====== BOTTOM: Use/Download Tools ====== -->
-  <div class="bottom-section">
-    <button class="bottom-btn" id="bottomBtn">Use / Download Tools</button>
-    <div class="bottom-note" id="bottomNote">Maaf, tools sedang tidak tersedia saat ini.</div>
-  </div>
 </main>
 
 <!-- Modal 503 -->
@@ -528,27 +471,6 @@
 
     // Sisanya (button) → buka modal 503
     openModal();
-  });
-
-  /* ============ BOTTOM BUTTON ============ */
-  const bottomBtn  = document.getElementById('bottomBtn');
-  const bottomNote = document.getElementById('bottomNote');
-  let noteTimer = null;
-
-  bottomBtn.addEventListener('click', function(){
-    bottomBtn.classList.remove('shake');
-    void bottomBtn.offsetWidth;
-    bottomBtn.classList.add('shake');
-
-    bottomNote.classList.add('show');
-    clearTimeout(noteTimer);
-    noteTimer = setTimeout(function(){
-      bottomNote.classList.remove('show');
-    }, 3000);
-
-    setTimeout(function(){
-      bottomBtn.classList.remove('shake');
-    }, 600);
   });
 
   renderCredits();
