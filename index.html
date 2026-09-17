@@ -24,7 +24,7 @@
   header{
     position:sticky;top:0;z-index:50;
     background:rgba(10,14,20,.75);
-    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     border-bottom:1px solid var(--border);
   }
   .topbar{
@@ -47,6 +47,7 @@
     background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(139,92,246,.12));
     border:1px solid rgba(99,102,241,.35);
     font-size:13px;font-weight:600;color:#c7d2fe;white-space:nowrap;
+    cursor:pointer;
   }
   .credit-pill .dot{
     width:8px;height:8px;border-radius:50%;background:var(--success);
@@ -55,8 +56,7 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .btn{
     border:none;cursor:pointer;font-family:inherit;
-    font-weight:600;font-size:13px;
-    padding:9px 16px;border-radius:10px;
+    font-weight:600;font-size:13px;padding:9px 16px;border-radius:10px;
     transition:transform .15s, box-shadow .2s, background .2s;
     white-space:nowrap;
   }
@@ -69,8 +69,7 @@
   .btn-ghost{background:var(--card-2);color:var(--text);border:1px solid var(--border);}
   .btn-ghost:hover{background:#222a3d;}
   .btn-logout{
-    background:rgba(239,68,68,.12);
-    color:#fca5a5;
+    background:rgba(239,68,68,.12);color:#fca5a5;
     border:1px solid rgba(239,68,68,.3);
   }
   .btn-logout:hover{background:rgba(239,68,68,.2);}
@@ -86,8 +85,14 @@
   .hero p{color:var(--muted);font-size:13.5px;}
   .hero .welcome-user{
     display:inline-flex;align-items:center;gap:6px;
-    font-size:12px;color:#c7d2fe;font-weight:600;
-    margin-top:6px;
+    font-size:12px;color:#c7d2fe;font-weight:600;margin-top:6px;
+  }
+  .role-badge{
+    display:inline-block;
+    font-size:10px;font-weight:800;letter-spacing:.6px;
+    padding:2px 8px;border-radius:6px;margin-left:8px;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff;text-transform:uppercase;
   }
 
   .section-title{
@@ -102,9 +107,7 @@
   }
 
   .tools-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-    gap:14px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;
   }
   .tool-card{
     text-align:left;background:var(--card);
@@ -125,7 +128,6 @@
     box-shadow:0 12px 30px rgba(0,0,0,.45);
   }
   .tool-card:hover::after{opacity:1;}
-
   .tool-card.featured{
     border-color:rgba(16,185,129,.35);
     background:linear-gradient(135deg,rgba(16,185,129,.08),var(--card));
@@ -138,10 +140,8 @@
     position:absolute;top:10px;right:10px;
     font-size:9.5px;font-weight:800;letter-spacing:.6px;
     padding:3px 7px;border-radius:6px;
-    background:linear-gradient(135deg,#10b981,#059669);
-    color:#fff;
+    background:linear-gradient(135deg,#10b981,#059669);color:#fff;
   }
-
   .tool-icon{
     width:40px;height:40px;border-radius:11px;
     display:grid;place-items:center;
@@ -152,7 +152,7 @@
   .tool-name{font-weight:600;font-size:14.5px;}
   .tool-desc{font-size:12px;color:var(--muted);line-height:1.45;}
 
-  /* Modal */
+  /* ===== Modal 503 ===== */
   .modal-backdrop{
     position:fixed;inset:0;z-index:200;
     background:rgba(5,8,14,.72);
@@ -192,7 +192,7 @@
   .modal-actions{display:flex;gap:10px;}
   .modal-actions .btn{flex:1;padding:11px;font-size:13.5px;}
 
-  /* Toast */
+  /* ===== Toast ===== */
   .toast-wrap{
     position:fixed;top:80px;right:16px;left:16px;z-index:300;
     display:flex;flex-direction:column;align-items:flex-end;gap:10px;
@@ -216,6 +216,56 @@
   .toast.warn svg{color:var(--warn);}
   @keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 
+  /* ===== Bottom "Use/Download Tools" ===== */
+  .bottom-section{
+    margin-top:40px;
+    padding-top:26px;
+    border-top:1px solid var(--border);
+  }
+  .bottom-btn{
+    display:block;width:100%;
+    padding:20px 18px;
+    background:#161b26;   /* abu-abu gelap, nyatu sama background */
+    border:1px solid #1f2534;
+    border-radius:14px;
+    color:#60a5fa;        /* biru */
+    font-family:inherit;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.4px;
+    cursor:pointer;
+    text-align:center;
+    transition:background .2s, border-color .2s;
+  }
+  .bottom-btn:hover{
+    background:#1a2030;
+    border-color:#2a3145;
+  }
+  .bottom-btn.shake{
+    animation:shakeBtn .55s cubic-bezier(.36,.07,.19,.97);
+  }
+  @keyframes shakeBtn{
+    10%,90%  { transform: translateX(-3px); }
+    20%,80%  { transform: translateX(5px);  }
+    30%,50%,70% { transform: translateX(-7px); }
+    40%,60%  { transform: translateX(7px);  }
+  }
+  .bottom-note{
+    text-align:center;
+    font-size:13px;
+    color:#fca5a5;
+    margin-top:12px;
+    font-weight:600;
+    opacity:0;
+    transform:translateY(-5px);
+    transition:opacity .3s, transform .3s;
+    pointer-events:none;
+  }
+  .bottom-note.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+
   @media (max-width:640px){
     .topbar{padding:12px 14px;gap:10px;}
     .brand span.brand-text{display:none;}
@@ -232,6 +282,7 @@
     .tool-desc{font-size:11px;}
     .modal{padding:22px 18px 18px;}
     .toast-wrap{top:70px;}
+    .bottom-btn{font-size:13.5px;padding:16px 14px;}
   }
   @media (max-width:380px){
     .tools-grid{grid-template-columns:1fr 1fr;}
@@ -251,7 +302,7 @@
     </div>
     <div class="spacer"></div>
     <div class="credit-box">
-      <div class="credit-pill">
+      <div class="credit-pill" id="creditPill" title="Lihat detail credit">
         <span class="dot"></span>
         <span>Credits Available: <strong id="creditCount">1</strong></span>
       </div>
@@ -264,7 +315,9 @@
 <main>
   <div class="hero">
     <div>
-      <h1>Selamat datang, <span id="userName">user</span> 👋</h1>
+      <h1>Selamat datang, <span id="userName">user</span>
+        <span class="role-badge" id="roleBadge">user</span>
+      </h1>
       <p>Pilih salah satu tools di bawah untuk mulai bekerja.</p>
       <div class="welcome-user">● Session aktif</div>
     </div>
@@ -275,8 +328,18 @@
 
   <div class="tools-grid" id="toolsGrid">
 
-    <!-- GET LINK — Featured & redirect ke get-link.html -->
-    <button class="tool-card featured" data-tool="Get Link" data-action="navigate" data-href="get-link.html">
+    <!-- CREDIT — page sendiri -->
+    <button class="tool-card featured" data-action="navigate" data-href="credit.html">
+      <span class="badge-new">NEW</span>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5S10.3 12 12 12s3 1.1 3 2.5S13.7 17 12 17s-3-1.1-3-2.5"/></svg>
+      </div>
+      <div class="tool-name">Credit</div>
+      <div class="tool-desc">Kelola credit & klaim mingguan.</div>
+    </button>
+
+    <!-- GET LINK — page sendiri -->
+    <button class="tool-card featured" data-action="navigate" data-href="get-link.html">
       <span class="badge-new">NEW</span>
       <div class="tool-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -342,6 +405,12 @@
     </button>
 
   </div>
+
+  <!-- ====== BOTTOM: Use/Download Tools ====== -->
+  <div class="bottom-section">
+    <button class="bottom-btn" id="bottomBtn">Use / Download Tools</button>
+    <div class="bottom-note" id="bottomNote">Maaf, tools sedang tidak tersedia saat ini.</div>
+  </div>
 </main>
 
 <!-- Modal 503 -->
@@ -367,156 +436,128 @@
 
 <div class="toast-wrap" id="toastWrap"></div>
 
+<script src="config.js"></script>
 <script>
-(function () {
+(function(){
   'use strict';
 
-  const USE_API = location.protocol !== 'file:';
-  const MOCK_KEY = 'mock_session_v1';
+  // Sembunyikan dulu biar gak keliatan sebelum auth OK
+  document.documentElement.style.visibility = 'hidden';
 
-  /* ============ SESSION GUARD ============ */
-  async function getSession() {
-    if (USE_API) {
-      try {
-        const r = await fetch('/api/auth', { credentials: 'same-origin' });
-        if (r.status !== 200) return null;
-        const d = await r.json();
-        return d.ok ? d : null;
-      } catch { return null; }
-    }
-    try {
-      const s = JSON.parse(localStorage.getItem(MOCK_KEY) || 'null');
-      if (s && s.exp > Date.now()) return s;
-      localStorage.removeItem(MOCK_KEY);
-    } catch {}
-    return null;
+  const session = Auth.requireLogin();
+  if (!session) return;
+
+  document.documentElement.style.visibility = '';
+  document.getElementById('userName').textContent = session.user;
+  document.getElementById('roleBadge').textContent = session.role || 'User';
+
+  /* ============ LOGOUT ============ */
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    Auth.logout();
+    location.replace('login.html');
+  });
+
+  /* ============ CREDIT ============ */
+  const creditCountEl = document.getElementById('creditCount');
+  const creditPill    = document.getElementById('creditPill');
+  const claimBtn      = document.getElementById('claimBtn');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const toastWrap     = document.getElementById('toastWrap');
+  const toolsGrid     = document.getElementById('toolsGrid');
+
+  function renderCredits(){
+    const s = Credit.init(session.user);
+    creditCountEl.textContent = s.credits;
   }
 
-  function hidePage() {
-    document.documentElement.style.visibility = 'hidden';
+  function showToast(msg, type){
+    type = type || 'warn';
+    const icons = {
+      success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+      warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    };
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = (icons[type] || icons.warn) + '<div>' + msg + '</div>';
+    toastWrap.appendChild(el);
+    setTimeout(function(){
+      el.style.transition = 'opacity .3s, transform .3s';
+      el.style.opacity = '0'; el.style.transform = 'translateX(30px)';
+      setTimeout(function(){ el.remove(); }, 300);
+    }, 3800);
   }
-  hidePage();
 
-  (async function init() {
-    const session = await getSession();
-    if (!session || !session.user) {
-      location.replace('login.html');
+  function openModal(){
+    modalBackdrop.classList.add('show');
+    modalBackdrop.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){
+    modalBackdrop.classList.remove('show');
+    modalBackdrop.setAttribute('aria-hidden','true');
+  }
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', function(e){
+    if (e.target === modalBackdrop) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeModal();
+  });
+
+  claimBtn.addEventListener('click', function(){
+    const res = Credit.claim(session.user);
+    if (!res.ok) {
+      const days = Math.ceil(res.remaining / (24*60*60*1000));
+      showToast('<strong>Weekly credit already claimed.</strong><br/>Next claim available in ' + days + ' days.', 'warn');
       return;
     }
-    document.documentElement.style.visibility = '';
-    document.getElementById('userName').textContent = session.user;
+    renderCredits();
+    showToast('<strong>Weekly credit claimed!</strong><br/>+1 credit added to your account.', 'success');
+  });
 
-    /* ============ LOGOUT ============ */
-    document.getElementById('logoutBtn').addEventListener('click', async function () {
-      if (USE_API) {
-        try {
-          await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ action: 'logout' })
-          });
-        } catch {}
-      } else {
-        try { localStorage.removeItem(MOCK_KEY); } catch {}
-      }
-      location.replace('login.html');
-    });
+  // Klik pill → ke credit.html
+  creditPill.addEventListener('click', function(){
+    location.href = 'credit.html';
+  });
 
-    /* ============ CREDIT SYSTEM ============ */
-    const STORAGE_KEY = 'dashboard_credit_state_v1';
-    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  /* ============ TOOL CLICK ============ */
+  toolsGrid.addEventListener('click', function(e){
+    const card = e.target.closest('.tool-card');
+    if (!card) return;
 
-    const creditCountEl = document.getElementById('creditCount');
-    const claimBtn      = document.getElementById('claimBtn');
-    const modalBackdrop = document.getElementById('modalBackdrop');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const toastWrap     = document.getElementById('toastWrap');
-    const toolsGrid     = document.getElementById('toolsGrid');
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return null;
-        const p = JSON.parse(raw);
-        if (typeof p.credits !== 'number' || typeof p.lastClaim !== 'number') return null;
-        return p;
-      } catch { return null; }
+    if (card.dataset.action === 'navigate' && card.dataset.href) {
+      location.href = card.dataset.href;
+      return;
     }
-    function saveState(s) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
-    }
-    function initState() {
-      let s = loadState();
-      if (!s) { s = { credits: 1, lastClaim: Date.now() }; saveState(s); }
-      return s;
-    }
-    function renderCredits(s) { creditCountEl.textContent = s.credits; }
+    openModal();
+  });
 
-    function showToast(msg, type) {
-      type = type || 'warn';
-      const icons = {
-        success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-        error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-        warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-      };
-      const el = document.createElement('div');
-      el.className = 'toast ' + type;
-      el.innerHTML = (icons[type] || icons.warn) + '<div>' + msg + '</div>';
-      toastWrap.appendChild(el);
-      setTimeout(() => {
-        el.style.transition = 'opacity .3s, transform .3s';
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(30px)';
-        setTimeout(() => el.remove(), 300);
-      }, 3800);
-    }
+  /* ============ BOTTOM BUTTON ============ */
+  const bottomBtn  = document.getElementById('bottomBtn');
+  const bottomNote = document.getElementById('bottomNote');
+  let noteTimer = null;
 
-    function openModal() {
-      modalBackdrop.classList.add('show');
-      modalBackdrop.setAttribute('aria-hidden', 'false');
-    }
-    function closeModal() {
-      modalBackdrop.classList.remove('show');
-      modalBackdrop.setAttribute('aria-hidden', 'true');
-    }
-    modalCloseBtn.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === modalBackdrop) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
-    });
+  bottomBtn.addEventListener('click', function(){
+    // Restart animasi shake
+    bottomBtn.classList.remove('shake');
+    void bottomBtn.offsetWidth; // force reflow
+    bottomBtn.classList.add('shake');
 
-    claimBtn.addEventListener('click', function () {
-      const s = loadState() || initState();
-      const now = Date.now();
-      const remaining = WEEK_MS - (now - s.lastClaim);
+    // Tampilkan note
+    bottomNote.classList.add('show');
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(function(){
+      bottomNote.classList.remove('show');
+    }, 3000);
 
-      if (s.credits > 0 && remaining > 0) {
-        const days = Math.ceil(remaining / (24 * 60 * 60 * 1000));
-        showToast('<strong>Weekly credit already claimed.</strong><br/>Next claim available in ' + days + ' days.', 'warn');
-        return;
-      }
-      s.credits += 1;
-      s.lastClaim = now;
-      saveState(s);
-      renderCredits(s);
-      showToast('<strong>Weekly credit claimed!</strong><br/>+1 credit added to your account.', 'success');
-    });
+    // Hapus class shake setelah selesai biar bisa dipicu ulang
+    setTimeout(function(){
+      bottomBtn.classList.remove('shake');
+    }, 600);
+  });
 
-    toolsGrid.addEventListener('click', function (e) {
-      const card = e.target.closest('.tool-card');
-      if (!card) return;
-      if (card.dataset.action === 'navigate' && card.dataset.href) {
-        location.href = card.dataset.href;
-        return;
-      }
-      openModal();
-    });
-
-    renderCredits(initState());
-  })();
+  renderCredits();
 })();
 </script>
 </body>
