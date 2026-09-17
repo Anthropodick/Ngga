@@ -445,12 +445,12 @@
 (function(){
   'use strict';
 
-  /* ========== SESSION GUARD ========== */
-  const SESSION_KEY = 'dashboard_session_v1';
-  try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-    if (!s || !s.user) { location.replace('login.html'); return; }
-  } catch(e){ location.replace('login.html'); return; }
+/* ========== SESSION GUARD ========== */
+const SESSION_KEY = 'dashboard_session_v1';
+try {
+  const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  if (!s || !s.user) { location.replace('login.html'); return; }
+} catch(e){ location.replace('login.html'); return; }
 
   /* ========== TOAST ========== */
   const toastWrap = document.getElementById('toastWrap');
