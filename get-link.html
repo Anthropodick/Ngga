@@ -445,12 +445,36 @@
 (function(){
   'use strict';
 
-/* ========== SESSION GUARD ========== */
-const SESSION_KEY = 'dashboard_session_v1';
-try {
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-  if (!s || !s.user) { location.replace('login.html'); return; }
-} catch(e){ location.replace('login.html'); return; }
+/* ========== SESSION GUARD (via API) ========== */
+const USE_API = location.protocol !== 'file:';
+const MOCK_KEY = 'mock_session_v1';
+
+document.documentElement.style.visibility = 'hidden';
+
+async function getSession() {
+  if (USE_API) {
+    try {
+      const r = await fetch('/api/auth', { credentials: 'same-origin' });
+      if (r.status !== 200) return null;
+      const d = await r.json();
+      return d.ok ? d : null;
+    } catch { return null; }
+  }
+  try {
+    const s = JSON.parse(localStorage.getItem(MOCK_KEY) || 'null');
+    if (s && s.exp > Date.now()) return s;
+    localStorage.removeItem(MOCK_KEY);
+  } catch {}
+  return null;
+}
+
+getSession().then((s) => {
+  if (!s || !s.user) {
+    location.replace('login.html');
+    return;
+  }
+  document.documentElement.style.visibility = '';
+});
 
   /* ========== TOAST ========== */
   const toastWrap = document.getElementById('toastWrap');
