@@ -238,14 +238,62 @@
   .log-stream::-webkit-scrollbar-thumb{background:#2b3550;border-radius:3px;}
   .log-line{display:flex;gap:8px;padding:1px 0;}
   .log-line .ts{color:#4b5871;flex-shrink:0;}
-  .log-line .proto{
-    flex-shrink:0;font-weight:700;
-  }
+  .log-line .proto{flex-shrink:0;font-weight:700;}
   .log-line .proto.tcp{color:#67e8f9;}
   .log-line .proto.udp{color:#c7d2fe;}
   .log-line .proto.tls{color:#6ee7b7;}
   .log-line .proto.dns{color:#fcd34d;}
   .log-line .msg{color:#b6c2d3;word-break:break-all;}
+
+  /* ===== Bottom "Use/Download Tools" ===== */
+  .bottom-section{
+    margin-top:40px;
+    padding-top:26px;
+    border-top:1px solid var(--border);
+  }
+  .bottom-btn{
+    display:block;width:100%;
+    padding:20px 18px;
+    background:#161b26;
+    border:1px solid #1f2534;
+    border-radius:14px;
+    color:#60a5fa;
+    font-family:inherit;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.4px;
+    cursor:pointer;
+    text-align:center;
+    transition:background .2s, border-color .2s;
+  }
+  .bottom-btn:hover{
+    background:#1a2030;
+    border-color:#2a3145;
+  }
+  .bottom-btn.shake{
+    animation:shakeBtn .55s cubic-bezier(.36,.07,.19,.97);
+  }
+  @keyframes shakeBtn{
+    10%,90%  { transform: translateX(-3px); }
+    20%,80%  { transform: translateX(5px);  }
+    30%,50%,70% { transform: translateX(-7px); }
+    40%,60%  { transform: translateX(7px);  }
+  }
+  .bottom-note{
+    text-align:center;
+    font-size:13px;
+    color:#fca5a5;
+    margin-top:12px;
+    font-weight:600;
+    opacity:0;
+    transform:translateY(-5px);
+    transition:opacity .3s, transform .3s;
+    pointer-events:none;
+  }
+  .bottom-note.show{
+    opacity:1;
+    transform:translateY(0);
+  }
 
   /* ===== Toast ===== */
   .toast-wrap{
@@ -275,6 +323,7 @@
     .stat-box .stat-value{font-size:18px;}
     .btn-row .btn{min-width:100%;}
     .status-pill{font-size:11px;padding:6px 10px;}
+    .bottom-btn{font-size:13.5px;padding:16px 14px;}
   }
 </style>
 </head>
@@ -437,44 +486,25 @@
     </div>
 
   </div>
+
+  <!-- ====== BOTTOM: Use/Download Tools ====== -->
+  <div class="bottom-section">
+    <button class="bottom-btn" id="bottomBtn">Use / Download Tools</button>
+    <div class="bottom-note" id="bottomNote">Maaf, tools sedang tidak tersedia saat ini.</div>
+  </div>
 </main>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
+<script src="config.js"></script>
 <script>
 (function(){
   'use strict';
 
-/* ========== SESSION GUARD (via API) ========== */
-const USE_API = location.protocol !== 'file:';
-const MOCK_KEY = 'mock_session_v1';
-
-document.documentElement.style.visibility = 'hidden';
-
-async function getSession() {
-  if (USE_API) {
-    try {
-      const r = await fetch('/api/auth', { credentials: 'same-origin' });
-      if (r.status !== 200) return null;
-      const d = await r.json();
-      return d.ok ? d : null;
-    } catch { return null; }
-  }
-  try {
-    const s = JSON.parse(localStorage.getItem(MOCK_KEY) || 'null');
-    if (s && s.exp > Date.now()) return s;
-    localStorage.removeItem(MOCK_KEY);
-  } catch {}
-  return null;
-}
-
-getSession().then((s) => {
-  if (!s || !s.user) {
-    location.replace('login.html');
-    return;
-  }
+  /* ========== SESSION GUARD ========== */
+  const session = Auth.requireLogin();
+  if (!session) return;
   document.documentElement.style.visibility = '';
-});
 
   /* ========== TOAST ========== */
   const toastWrap = document.getElementById('toastWrap');
@@ -483,10 +513,11 @@ getSession().then((s) => {
     el.className = 'toast';
     el.textContent = msg;
     toastWrap.appendChild(el);
-    setTimeout(()=>{
+    setTimeout(function(){
       el.style.transition = 'opacity .3s, transform .3s';
-      el.style.opacity = '0'; el.style.transform = 'translateX(30px)';
-      setTimeout(()=> el.remove(), 300);
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(30px)';
+      setTimeout(function(){ el.remove(); }, 300);
     }, 3000);
   }
 
@@ -501,9 +532,9 @@ getSession().then((s) => {
   let currentServer = 'sg';
 
   const serverItems = document.querySelectorAll('.server-item');
-  serverItems.forEach(item => {
-    item.addEventListener('click', () => {
-      serverItems.forEach(i => i.classList.remove('active'));
+  serverItems.forEach(function(item){
+    item.addEventListener('click', function(){
+      serverItems.forEach(function(i){ i.classList.remove('active'); });
       item.classList.add('active');
       const key = item.dataset.server;
       currentServer = key;
@@ -513,9 +544,8 @@ getSession().then((s) => {
     });
   });
 
-  // Refresh latency random
   window.refreshLatency = function(){
-    serverItems.forEach(item => {
+    serverItems.forEach(function(item){
       const latEl = item.querySelector('.latency');
       const base = parseInt(latEl.textContent, 10) || 50;
       const jitter = Math.floor(Math.random()*20) - 10;
@@ -584,7 +614,7 @@ getSession().then((s) => {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
 
     toast('Config downloaded: ' + a.download);
   });
@@ -592,25 +622,34 @@ getSession().then((s) => {
   /* ========== COPY LINK ========== */
   document.getElementById('copyBtn').addEventListener('click', function(){
     const link = 'https://tunnel.local/dl/' + currentServer + '/' + sessionId;
-    navigator.clipboard.writeText(link).then(
-      () => toast('Link copied: ' + link),
-      () => toast('Gagal copy — clipboard diblokir browser')
-    );
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(
+        function(){ toast('Link copied: ' + link); },
+        function(){ toast('Gagal copy — clipboard diblokir browser'); }
+      );
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast('Link copied: ' + link); }
+      catch(e){ toast('Gagal copy link'); }
+      ta.remove();
+    }
   });
 
   /* ========== LIVE TRAFFIC (mock) ========== */
   let packets = 0, bytes = 0, sessions = 0, uptimeSec = 0;
   let paused = false;
 
-  const statPackets = document.getElementById('statPackets');
-  const statBytes   = document.getElementById('statBytes');
-  const statSessions= document.getElementById('statSessions');
-  const statUptime  = document.getElementById('statUptime');
-  const logStream   = document.getElementById('logStream');
-  const packetChart = document.getElementById('packetChart');
-  const byteChart   = document.getElementById('byteChart');
+  const statPackets  = document.getElementById('statPackets');
+  const statBytes    = document.getElementById('statBytes');
+  const statSessions = document.getElementById('statSessions');
+  const statUptime   = document.getElementById('statUptime');
+  const logStream    = document.getElementById('logStream');
+  const packetChart  = document.getElementById('packetChart');
+  const byteChart    = document.getElementById('byteChart');
 
-  // Build chart bars (12 bars)
   function buildChart(container){
     container.innerHTML = '';
     for (let i=0;i<12;i++){
@@ -673,31 +712,24 @@ getSession().then((s) => {
       '<span class="msg">' + randPick(sampleHosts) + ' — ' + randPick(sampleMsgs) + '</span>';
 
     logStream.appendChild(line);
-    // Keep max 60 lines
     while (logStream.children.length > 60) logStream.removeChild(logStream.firstChild);
     logStream.scrollTop = logStream.scrollHeight;
   }
 
-  // Seed a few logs
   for (let i=0;i<5;i++) addLog();
 
-  /* ========== INTERVAL: stats + logs ========== */
-  const statsInterval = setInterval(() => {
+  const statsInterval = setInterval(function(){
     if (paused) return;
-
-    // Packets
     const pkt = Math.floor(Math.random()*40) + 10;
     packets += pkt;
     statPackets.textContent = packets.toLocaleString('en-US');
     pushChart(packetChart, pkt, 60);
 
-    // Bytes (KB)
     const kb = Math.random()*80 + 5;
     bytes += kb;
     statBytes.innerHTML = fmtBytes(bytes);
     pushChart(byteChart, kb, 100);
 
-    // Sessions (0–12)
     if (Math.random() > 0.7) {
       sessions = Math.max(0, sessions + (Math.random() > 0.5 ? 1 : -1));
       if (sessions > 12) sessions = 12;
@@ -705,12 +737,12 @@ getSession().then((s) => {
     }
   }, 900);
 
-  const logInterval = setInterval(() => {
+  const logInterval = setInterval(function(){
     if (paused) return;
     addLog();
   }, 700);
 
-  const uptimeInterval = setInterval(() => {
+  const uptimeInterval = setInterval(function(){
     if (paused) return;
     uptimeSec++;
     statUptime.textContent = fmtUptime(uptimeSec);
@@ -718,7 +750,7 @@ getSession().then((s) => {
 
   /* ========== PAUSE ========== */
   const pauseBtn = document.getElementById('pauseBtn');
-  pauseBtn.addEventListener('click', () => {
+  pauseBtn.addEventListener('click', function(){
     paused = !paused;
     pauseBtn.textContent = paused ? '▶ Resume' : '⏸ Pause';
     document.getElementById('statusText').textContent = paused ? 'Tunnel Paused' : 'Tunnel Active';
@@ -726,6 +758,27 @@ getSession().then((s) => {
     statusDot.style.background = paused ? '#f59e0b' : '#10b981';
     statusDot.style.boxShadow = '0 0 10px ' + (paused ? '#f59e0b' : '#10b981');
     toast(paused ? 'Live stream paused' : 'Live stream resumed');
+  });
+
+  /* ========== BOTTOM BUTTON ========== */
+  const bottomBtn  = document.getElementById('bottomBtn');
+  const bottomNote = document.getElementById('bottomNote');
+  let noteTimer = null;
+
+  bottomBtn.addEventListener('click', function(){
+    bottomBtn.classList.remove('shake');
+    void bottomBtn.offsetWidth;
+    bottomBtn.classList.add('shake');
+
+    bottomNote.classList.add('show');
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(function(){
+      bottomNote.classList.remove('show');
+    }, 3000);
+
+    setTimeout(function(){
+      bottomBtn.classList.remove('shake');
+    }, 600);
   });
 
 })();
