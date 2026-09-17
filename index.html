@@ -116,6 +116,7 @@
     display:flex;flex-direction:column;gap:10px;
     position:relative;overflow:hidden;
     transition:transform .18s, border-color .2s, box-shadow .2s;
+    text-decoration:none;
   }
   .tool-card::after{
     content:'';position:absolute;inset:0;border-radius:14px;
@@ -149,7 +150,7 @@
     border:1px solid rgba(99,102,241,.3);color:#c7d2fe;
   }
   .tool-icon svg{width:20px;height:20px;stroke-width:2;}
-  .tool-name{font-weight:600;font-size:14.5px;}
+  .tool-name{font-weight:600;font-size:14.5px;color:var(--text);}
   .tool-desc{font-size:12px;color:var(--muted);line-height:1.45;}
 
   /* ===== Modal 503 ===== */
@@ -225,10 +226,10 @@
   .bottom-btn{
     display:block;width:100%;
     padding:20px 18px;
-    background:#161b26;   /* abu-abu gelap, nyatu sama background */
+    background:#161b26;
     border:1px solid #1f2534;
     border-radius:14px;
-    color:#60a5fa;        /* biru */
+    color:#60a5fa;
     font-family:inherit;
     font-weight:700;
     font-size:15px;
@@ -329,24 +330,24 @@
   <div class="tools-grid" id="toolsGrid">
 
     <!-- CREDIT — page sendiri -->
-    <button class="tool-card featured" data-action="navigate" data-href="credit.html">
+    <a class="tool-card featured" href="credit.html">
       <span class="badge-new">NEW</span>
       <div class="tool-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5S10.3 12 12 12s3 1.1 3 2.5S13.7 17 12 17s-3-1.1-3-2.5"/></svg>
       </div>
       <div class="tool-name">Credit</div>
       <div class="tool-desc">Kelola credit & klaim mingguan.</div>
-    </button>
+    </a>
 
     <!-- GET LINK — page sendiri -->
-    <button class="tool-card featured" data-action="navigate" data-href="get-link.html">
+    <a class="tool-card featured" href="get-link.html">
       <span class="badge-new">NEW</span>
       <div class="tool-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </div>
       <div class="tool-name">Get Link</div>
       <div class="tool-desc">Ambil VPN config & tunnel file.</div>
-    </button>
+    </a>
 
     <button class="tool-card" data-tool="Decompile">
       <div class="tool-icon">
@@ -441,13 +442,10 @@
 (function(){
   'use strict';
 
-  // Sembunyikan dulu biar gak keliatan sebelum auth OK
-  document.documentElement.style.visibility = 'hidden';
-
   const session = Auth.requireLogin();
   if (!session) return;
-
   document.documentElement.style.visibility = '';
+
   document.getElementById('userName').textContent = session.user;
   document.getElementById('roleBadge').textContent = session.role || 'User';
 
@@ -516,7 +514,6 @@
     showToast('<strong>Weekly credit claimed!</strong><br/>+1 credit added to your account.', 'success');
   });
 
-  // Klik pill → ke credit.html
   creditPill.addEventListener('click', function(){
     location.href = 'credit.html';
   });
@@ -526,10 +523,10 @@
     const card = e.target.closest('.tool-card');
     if (!card) return;
 
-    if (card.dataset.action === 'navigate' && card.dataset.href) {
-      location.href = card.dataset.href;
-      return;
-    }
+    // Kalau card berupa <a> (Credit / Get Link) → biarkan browser handle native
+    if (card.tagName === 'A') return;
+
+    // Sisanya (button) → buka modal 503
     openModal();
   });
 
@@ -539,19 +536,16 @@
   let noteTimer = null;
 
   bottomBtn.addEventListener('click', function(){
-    // Restart animasi shake
     bottomBtn.classList.remove('shake');
-    void bottomBtn.offsetWidth; // force reflow
+    void bottomBtn.offsetWidth;
     bottomBtn.classList.add('shake');
 
-    // Tampilkan note
     bottomNote.classList.add('show');
     clearTimeout(noteTimer);
     noteTimer = setTimeout(function(){
       bottomNote.classList.remove('show');
     }, 3000);
 
-    // Hapus class shake setelah selesai biar bisa dipicu ulang
     setTimeout(function(){
       bottomBtn.classList.remove('shake');
     }, 600);
