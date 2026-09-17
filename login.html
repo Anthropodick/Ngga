@@ -9,7 +9,6 @@
     --bg:#0a0e14; --card:#151b28; --border:#242c3d;
     --text:#e6edf3; --muted:#8b98ab;
     --accent:#6366f1; --accent-2:#8b5cf6;
-    --danger:#ef4444; --success:#10b981;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
@@ -87,7 +86,7 @@
 </head>
 <body>
 
-<form class="login-card" id="loginForm" autocomplete="on" novalidate>
+<form class="login-card" id="loginForm" novalidate>
   <div class="logo-big">M</div>
   <h1>Welcome Back</h1>
   <p class="sub">Masuk untuk mengakses Main Dashboard</p>
@@ -107,138 +106,64 @@
   </div>
 
   <div class="row">
-    <label><input type="checkbox" id="remember" checked /> Remember me (7 hari)</label>
+    <label><input type="checkbox" id="remember" checked /> Remember me</label>
     <a id="forgotLink">Forgot?</a>
   </div>
 
   <button type="submit" class="btn" id="submitBtn">Sign In</button>
 
   <p class="hint">
-    Demo: <code>admin</code> / <code>admin123</code>
+    Demo: <code>admin</code>/<code>admin123</code> · <code>user</code>/<code>user123</code>
   </p>
 </form>
 
+<script src="config.js"></script>
 <script>
-(function () {
+(function(){
   'use strict';
 
-  const USE_API = location.protocol !== 'file:'; // file:// → pakai mock lokal
-  const MOCK_KEY = 'mock_session_v1';
-  const MOCK_USER = 'admin';
-  const MOCK_PASS = 'admin123';
+  // Kalau udah login, langsung ke dashboard
+  if (Auth.redirectIfLoggedIn()) return;
 
-  const form     = document.getElementById('loginForm');
-  const errBox   = document.getElementById('errBox');
-  const btn      = document.getElementById('submitBtn');
-  const userIn   = document.getElementById('username');
-  const passIn   = document.getElementById('password');
-  const rememberIn = document.getElementById('remember');
+  const form   = document.getElementById('loginForm');
+  const errBox = document.getElementById('errBox');
+  const btn    = document.getElementById('submitBtn');
 
-  /* ---------- Cek session yang sudah ada → redirect ---------- */
-  (async function checkExisting() {
-    const session = await getSession();
-    if (session && session.user) {
-      location.replace('index.html');
-    }
-  })();
-
-  async function getSession() {
-    if (USE_API) {
-      try {
-        const r = await fetch('/api/auth', { credentials: 'same-origin' });
-        if (r.status === 200) {
-          const d = await r.json();
-          return d.ok ? d : null;
-        }
-        return null;
-      } catch { return null; }
-    }
-    // Fallback file://
-    try {
-      const s = JSON.parse(localStorage.getItem(MOCK_KEY) || 'null');
-      if (s && s.exp > Date.now()) return s;
-      localStorage.removeItem(MOCK_KEY);
-    } catch {}
-    return null;
-  }
-
-  /* ---------- Login request ---------- */
-  async function doLogin(username, password, remember) {
-    if (USE_API) {
-      try {
-        const r = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ action: 'login', username, password, remember })
-        });
-        let data = {};
-        try { data = await r.json(); } catch {}
-        return { ok: r.ok && data.ok, error: data.error, status: r.status };
-      } catch (e) {
-        return { ok: false, error: 'network_error' };
-      }
-    }
-    // Mock fallback (file://)
-    await new Promise((r) => setTimeout(r, 400));
-    if (username === MOCK_USER && password === MOCK_PASS) {
-      const days = remember ? 7 : 1;
-      try {
-        localStorage.setItem(MOCK_KEY, JSON.stringify({
-          user: username,
-          exp: Date.now() + days * 24 * 3600 * 1000
-        }));
-      } catch {}
-      return { ok: true };
-    }
-    return { ok: false, error: 'invalid_credentials' };
-  }
-
-  /* ---------- Error messages ---------- */
-  function showError(code) {
-    const map = {
-      invalid_credentials: 'Username atau password salah.',
-      missing_fields:      'Username dan password wajib diisi.',
-      network_error:       'Tidak bisa terhubung ke server. Cek koneksi kamu.',
-      too_many_requests:   'Terlalu banyak percobaan. Coba lagi nanti.',
-      default:             'Login gagal. Coba lagi.'
-    };
-    errBox.textContent = map[code] || map.default;
-    errBox.classList.add('show');
-  }
-
-  /* ---------- Submit ---------- */
-  form.addEventListener('submit', async function (e) {
+  form.addEventListener('submit', function(e){
     e.preventDefault();
     errBox.classList.remove('show');
 
-    const username = userIn.value.trim();
-    const password = passIn.value;
-    const remember = rememberIn.checked;
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
 
-    if (!username || !password) {
-      showError('missing_fields');
+    if (!u || !p) {
+      errBox.textContent = 'Username dan password wajib diisi.';
+      errBox.classList.add('show');
       return;
     }
 
     btn.disabled = true;
     btn.textContent = 'Memproses...';
 
-    const res = await doLogin(username, password, remember);
-
-    if (res.ok) {
-      btn.textContent = 'Berhasil ✓';
-      setTimeout(() => location.replace('index.html'), 300);
-    } else {
-      showError(res.error);
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-      passIn.value = '';
-      passIn.focus();
-    }
+    // Delay kecil biar kerasa "beneran"
+    setTimeout(function(){
+      const res = Auth.login(u, p, remember);
+      if (res.ok) {
+        btn.textContent = 'Berhasil ✓';
+        setTimeout(function(){ location.replace('index.html'); }, 300);
+      } else {
+        errBox.textContent = 'Username atau password salah.';
+        errBox.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    }, 450);
   });
 
-  document.getElementById('forgotLink').addEventListener('click', function () {
+  document.getElementById('forgotLink').addEventListener('click', function(){
     alert('Hubungi admin untuk reset password.');
   });
 })();
