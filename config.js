@@ -6,7 +6,7 @@ window.APP_CONFIG = {
   // ---------- USER & PASSWORD ----------
   users: [
     { username: 'admin', password: 'admin123', role: 'Admin' },
-    { username: 'user',  password: 'user123',  role: 'User'  }
+    { username: 'anthropoid',  password: 'Uzbeckh',  role: 'SUKI'  }
   ],
 
   // ---------- SESSION ----------
