@@ -371,111 +371,152 @@
 (function () {
   'use strict';
 
-  /* ========== SESSION GUARD ========== */
-  const SESSION_KEY = 'dashboard_session_v1';
-  let session = null;
-  try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){}
-  if (!session || !session.user) {
-    location.replace('login.html');
-    return;
-  }
+  const USE_API = location.protocol !== 'file:';
+  const MOCK_KEY = 'mock_session_v1';
 
-  const userNameEl = document.getElementById('userName');
-  userNameEl.textContent = session.user;
-
-  /* ========== LOGOUT ========== */
-  document.getElementById('logoutBtn').addEventListener('click', function(){
-    try { localStorage.removeItem(SESSION_KEY); } catch(e){}
-    location.replace('login.html');
-  });
-
-  /* ========== CREDIT SYSTEM ========== */
-  const STORAGE_KEY = 'dashboard_credit_state_v1';
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-  const creditCountEl = document.getElementById('creditCount');
-  const claimBtn      = document.getElementById('claimBtn');
-  const modalBackdrop = document.getElementById('modalBackdrop');
-  const modalCloseBtn = document.getElementById('modalCloseBtn');
-  const toastWrap     = document.getElementById('toastWrap');
-  const toolsGrid     = document.getElementById('toolsGrid');
-
-  function loadState() {
+  /* ============ SESSION GUARD ============ */
+  async function getSession() {
+    if (USE_API) {
+      try {
+        const r = await fetch('/api/auth', { credentials: 'same-origin' });
+        if (r.status !== 200) return null;
+        const d = await r.json();
+        return d.ok ? d : null;
+      } catch { return null; }
+    }
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const p = JSON.parse(raw);
-      if (typeof p.credits !== 'number' || typeof p.lastClaim !== 'number') return null;
-      return p;
-    } catch(e){ return null; }
-  }
-  function saveState(s) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){}
-  }
-  function initState() {
-    let s = loadState();
-    if (!s) { s = { credits: 1, lastClaim: Date.now() }; saveState(s); }
-    return s;
-  }
-  function renderCredits(s){ creditCountEl.textContent = s.credits; }
-
-  function showToast(msg, type) {
-    type = type || 'warn';
-    const icons = {
-      success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-      error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-      warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-    };
-    const el = document.createElement('div');
-    el.className = 'toast ' + type;
-    el.innerHTML = (icons[type]||icons.warn) + '<div>' + msg + '</div>';
-    toastWrap.appendChild(el);
-    setTimeout(()=>{
-      el.style.transition = 'opacity .3s, transform .3s';
-      el.style.opacity = '0'; el.style.transform = 'translateX(30px)';
-      setTimeout(()=> el.remove(), 300);
-    }, 3800);
+      const s = JSON.parse(localStorage.getItem(MOCK_KEY) || 'null');
+      if (s && s.exp > Date.now()) return s;
+      localStorage.removeItem(MOCK_KEY);
+    } catch {}
+    return null;
   }
 
-  function openModal(){ modalBackdrop.classList.add('show'); modalBackdrop.setAttribute('aria-hidden','false'); }
-  function closeModal(){ modalBackdrop.classList.remove('show'); modalBackdrop.setAttribute('aria-hidden','true'); }
-  modalCloseBtn.addEventListener('click', closeModal);
-  modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  function hidePage() {
+    document.documentElement.style.visibility = 'hidden';
+  }
+  hidePage();
 
-  claimBtn.addEventListener('click', function(){
-    const s = loadState() || initState();
-    const now = Date.now();
-    const elapsed = now - s.lastClaim;
-    const remaining = WEEK_MS - elapsed;
-
-    if (s.credits > 0 && remaining > 0) {
-      const days = Math.ceil(remaining / (24*60*60*1000));
-      showToast('<strong>Weekly credit already claimed.</strong><br/>Next claim available in ' + days + ' days.', 'warn');
+  (async function init() {
+    const session = await getSession();
+    if (!session || !session.user) {
+      location.replace('login.html');
       return;
     }
-    s.credits += 1; s.lastClaim = now;
-    saveState(s); renderCredits(s);
-    showToast('<strong>Weekly credit claimed!</strong><br/>+1 credit added to your account.', 'success');
-  });
+    document.documentElement.style.visibility = '';
+    document.getElementById('userName').textContent = session.user;
 
-  /* ========== TOOL CLICK HANDLER ========== */
-  toolsGrid.addEventListener('click', function(e){
-    const card = e.target.closest('.tool-card');
-    if (!card) return;
+    /* ============ LOGOUT ============ */
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+      if (USE_API) {
+        try {
+          await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'logout' })
+          });
+        } catch {}
+      } else {
+        try { localStorage.removeItem(MOCK_KEY); } catch {}
+      }
+      location.replace('login.html');
+    });
 
-    // Get Link → redirect ke halaman baru
-    if (card.dataset.action === 'navigate' && card.dataset.href) {
-      location.href = card.dataset.href;
-      return;
+    /* ============ CREDIT SYSTEM ============ */
+    const STORAGE_KEY = 'dashboard_credit_state_v1';
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    const creditCountEl = document.getElementById('creditCount');
+    const claimBtn      = document.getElementById('claimBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const toastWrap     = document.getElementById('toastWrap');
+    const toolsGrid     = document.getElementById('toolsGrid');
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const p = JSON.parse(raw);
+        if (typeof p.credits !== 'number' || typeof p.lastClaim !== 'number') return null;
+        return p;
+      } catch { return null; }
+    }
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+    }
+    function initState() {
+      let s = loadState();
+      if (!s) { s = { credits: 1, lastClaim: Date.now() }; saveState(s); }
+      return s;
+    }
+    function renderCredits(s) { creditCountEl.textContent = s.credits; }
+
+    function showToast(msg, type) {
+      type = type || 'warn';
+      const icons = {
+        success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+      };
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = (icons[type] || icons.warn) + '<div>' + msg + '</div>';
+      toastWrap.appendChild(el);
+      setTimeout(() => {
+        el.style.transition = 'opacity .3s, transform .3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(30px)';
+        setTimeout(() => el.remove(), 300);
+      }, 3800);
     }
 
-    // Tool lain → modal 503 (0 credits deducted)
-    openModal();
-  });
+    function openModal() {
+      modalBackdrop.classList.add('show');
+      modalBackdrop.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+      modalBackdrop.classList.remove('show');
+      modalBackdrop.setAttribute('aria-hidden', 'true');
+    }
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
 
-  const state = initState();
-  renderCredits(state);
+    claimBtn.addEventListener('click', function () {
+      const s = loadState() || initState();
+      const now = Date.now();
+      const remaining = WEEK_MS - (now - s.lastClaim);
+
+      if (s.credits > 0 && remaining > 0) {
+        const days = Math.ceil(remaining / (24 * 60 * 60 * 1000));
+        showToast('<strong>Weekly credit already claimed.</strong><br/>Next claim available in ' + days + ' days.', 'warn');
+        return;
+      }
+      s.credits += 1;
+      s.lastClaim = now;
+      saveState(s);
+      renderCredits(s);
+      showToast('<strong>Weekly credit claimed!</strong><br/>+1 credit added to your account.', 'success');
+    });
+
+    toolsGrid.addEventListener('click', function (e) {
+      const card = e.target.closest('.tool-card');
+      if (!card) return;
+      if (card.dataset.action === 'navigate' && card.dataset.href) {
+        location.href = card.dataset.href;
+        return;
+      }
+      openModal();
+    });
+
+    renderCredits(initState());
+  })();
 })();
 </script>
 </body>
