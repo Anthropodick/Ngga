@@ -21,8 +21,8 @@ window.APP_CONFIG = {
     },
     // CONTOH USER BANNED — untuk testing UI banned
     {
-      username: 'banned',
-      password: 'banned123',
+      username: 'Anthropoid',
+      password: '123321123',
       role: 'User',
       banned: true,
       bannedReason: 'Too many device'
