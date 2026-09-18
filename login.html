@@ -9,6 +9,7 @@
     --bg:#0a0e14; --card:#151b28; --border:#242c3d;
     --text:#e6edf3; --muted:#8b98ab;
     --accent:#6366f1; --accent-2:#8b5cf6;
+    --danger:#ef4444;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
@@ -122,7 +123,6 @@
 (function(){
   'use strict';
 
-  // Kalau udah login, langsung ke dashboard
   if (Auth.redirectIfLoggedIn()) return;
   document.documentElement.style.visibility = '';
 
@@ -149,17 +149,35 @@
 
     setTimeout(function(){
       const res = Auth.login(u, p, remember);
+
       if (res.ok) {
         btn.textContent = 'Berhasil ✓';
         setTimeout(function(){ location.replace('index.html'); }, 300);
-      } else {
-        errBox.textContent = 'Username atau password salah.';
-        errBox.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
+        return;
       }
+
+      // === USER BANNED ===
+      if (res.banned) {
+        btn.textContent = 'Ditolak ✕';
+        // Simpan info buat banned.html
+        try {
+          sessionStorage.setItem('banned_info', JSON.stringify({
+            user: res.user,
+            reason: res.reason,
+            at: Date.now()
+          }));
+        } catch(e){}
+        setTimeout(function(){ location.replace('banned.html'); }, 400);
+        return;
+      }
+
+      // === WRONG CREDS ===
+      errBox.textContent = 'Username atau password salah.';
+      errBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
     }, 450);
   });
 
