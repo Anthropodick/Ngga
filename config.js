@@ -5,21 +5,51 @@
 window.APP_CONFIG = {
   // ---------- USER & PASSWORD ----------
   users: [
-    { username: 'admin', password: 'admin123', role: 'Admin' },
-    { username: 'anthropoid',  password: 'Uzbeckh',  role: 'SUKI'  }
+    {
+      username: 'admin',
+      password: 'admin123',
+      role: 'Admin',
+      banned: false,
+      bannedReason: ''
+    },
+    {
+      username: 'user',
+      password: 'user123',
+      role: 'User',
+      banned: false,
+      bannedReason: ''
+    },
+    // CONTOH USER BANNED — untuk testing UI banned
+    {
+      username: 'banned',
+      password: 'banned123',
+      role: 'User',
+      banned: true,
+      bannedReason: 'Too many device'
+    }
   ],
 
   // ---------- SESSION ----------
   sessionKey: 'app_session_v1',
-  sessionHours: 24,          // berapa jam login bertahan
+  sessionHours: 24,
 
   // ---------- CREDIT ----------
-  defaultCredits: 1,         // credit awal waktu pertama daftar
-  weeklyDays: 7              // jeda claim mingguan (hari)
+  defaultCredits: 1,
+  weeklyDays: 7,
+
+  // ---------- ADMIN CUSTOM CREDIT ----------
+  adminCustomCredit: {
+    enabled: true,
+    maxAmount: 999,
+    minAmount: 0,
+    presets: [5, 10, 25, 50, 100],
+    allowDirectSet: true,
+    allowReset: true
+  }
 };
 
 /* =========================================================
-   HELPER AUTH — jangan perlu diubah
+   HELPER AUTH
    ========================================================= */
 window.Auth = (function () {
   const CFG = window.APP_CONFIG;
@@ -36,11 +66,25 @@ window.Auth = (function () {
     } catch { return null; }
   }
 
+  function findUser(username) {
+    return CFG.users.find(function(x){ return x.username === username; }) || null;
+  }
+
   function login(username, password, remember) {
     const u = CFG.users.find(
       (x) => x.username === username && x.password === password
     );
     if (!u) return { ok: false };
+
+    // Cek status banned SEBELUM kasih session
+    if (u.banned) {
+      return {
+        ok: false,
+        banned: true,
+        user: u.username,
+        reason: u.bannedReason || 'No reason provided'
+      };
+    }
 
     const hours = remember ? CFG.sessionHours * 7 : CFG.sessionHours;
     const session = {
@@ -56,32 +100,33 @@ window.Auth = (function () {
     try { localStorage.removeItem(KEY); } catch {}
   }
 
-  // Redirect ke login.html kalau belum login
   function requireLogin() {
     const s = getUser();
     if (!s) { location.replace('login.html'); return null; }
     return s;
   }
 
-  // Kalau sudah login, redirect ke index.html (dipakai di login.html)
   function redirectIfLoggedIn() {
     const s = getUser();
     if (s) { location.replace('index.html'); return true; }
     return false;
   }
 
-  return { getUser, login, logout, requireLogin, redirectIfLoggedIn };
+  function isAdmin() {
+    const s = getUser();
+    return !!(s && s.role === 'Admin');
+  }
+
+  return { getUser, findUser, login, logout, requireLogin, redirectIfLoggedIn, isAdmin };
 })();
 
 /* =========================================================
-   HELPER CREDIT — per user, disimpan di localStorage
+   HELPER CREDIT
    ========================================================= */
 window.Credit = (function () {
   const CFG = window.APP_CONFIG;
 
-  function keyFor(user) {
-    return 'app_credit_' + user;
-  }
+  function keyFor(user) { return 'app_credit_' + user; }
 
   function load(user) {
     try {
@@ -131,5 +176,66 @@ window.Credit = (function () {
     return { ok: true, state: s };
   }
 
-  return { load, save, init, claim, getRemainingMs };
+  function setCredits(user, amount, actor) {
+    const cfg = CFG.adminCustomCredit;
+    if (!cfg || !cfg.enabled) return { ok: false, error: 'disabled' };
+    amount = parseInt(amount, 10);
+    if (isNaN(amount)) return { ok: false, error: 'invalid' };
+    if (amount < cfg.minAmount) return { ok: false, error: 'too_low' };
+    if (amount > cfg.maxAmount) return { ok: false, error: 'too_high' };
+
+    const s = init(user);
+    const diff = amount - s.credits;
+    s.credits = amount;
+    s.history.unshift({
+      type: 'admin', amount: diff, at: Date.now(),
+      by: actor || 'admin', note: 'Set by admin'
+    });
+    if (s.history.length > 20) s.history.length = 20;
+    save(user, s);
+    return { ok: true, state: s, diff };
+  }
+
+  function addCredits(user, amount, actor) {
+    const cfg = CFG.adminCustomCredit;
+    if (!cfg || !cfg.enabled) return { ok: false, error: 'disabled' };
+    amount = parseInt(amount, 10);
+    if (isNaN(amount) || amount <= 0) return { ok: false, error: 'invalid' };
+
+    const s = init(user);
+    const newTotal = s.credits + amount;
+    if (newTotal > cfg.maxAmount) return { ok: false, error: 'too_high' };
+    s.credits = newTotal;
+    s.history.unshift({
+      type: 'admin', amount: amount, at: Date.now(),
+      by: actor || 'admin', note: 'Added by admin'
+    });
+    if (s.history.length > 20) s.history.length = 20;
+    save(user, s);
+    return { ok: true, state: s, added: amount };
+  }
+
+  function resetCredits(user, actor) {
+    const cfg = CFG.adminCustomCredit;
+    if (!cfg || !cfg.enabled || !cfg.allowReset) return { ok: false, error: 'disabled' };
+    const s = init(user);
+    const diff = CFG.defaultCredits - s.credits;
+    s.credits = CFG.defaultCredits;
+    s.history.unshift({
+      type: 'admin', amount: diff, at: Date.now(),
+      by: actor || 'admin', note: 'Reset by admin'
+    });
+    if (s.history.length > 20) s.history.length = 20;
+    save(user, s);
+    return { ok: true, state: s };
+  }
+
+  function isAdminCreditEnabled() {
+    return !!(CFG.adminCustomCredit && CFG.adminCustomCredit.enabled);
+  }
+
+  return {
+    load, save, init, claim, getRemainingMs,
+    setCredits, addCredits, resetCredits, isAdminCreditEnabled
+  };
 })();
